@@ -21,7 +21,20 @@ const User = require('@models/user');
 // instale el nodemon esto es una maravilla xD basicamente sin esto tendriamos q detener la api y volver a correr por cada "guardar" que hagamos 
 // y nodemon te lo hace automaticamente ver package.json ("start": "nodemon index.js") 
 
+const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
+const CognitoUserPool = AmazonCognitoIdentity.CognitoUserPool;
+const AWS = require('aws-sdk');
+const jwkToPem = require('jwk-to-pem');
+const jwt = require('jsonwebtoken');
+global.fetch = require('node-fetch');
 
+const poolData = {    
+    UserPoolId : "us-east-2_PdnQkA2Bb", // Your user pool id here    
+    ClientId : "7n6ktka00arkrikn2et9uget3k" // Your client id here
+    }; 
+const pool_region = 'us-east-2';
+
+    
 const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a continuacion nos conectaremos a la base de datos 
     mongoose.Promise = Promise; // proccess.env es como indicaremos que nos referimos a la variable de entorno
     return mongoose.connect('mongodb://' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB,
@@ -59,58 +72,169 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 });
             });
             app.post('/login', (req, res) => {
-                console.log('req.body');
-                console.log(req.body);
+
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
                 const email = req.body.email.trim();
                 const password = req.body.password.trim();
+                var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+                    Username : email,
+                    Password : password,
+                });
+            
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.authenticateUser(authenticationDetails, {
+                    onSuccess: function (result) {
+                        return res.status(200).json({
+                            accessToken: result.getAccessToken().getJwtToken(),
+                            idToken: result.getIdToken().getJwtToken(),
+                            refreshToken: result.getRefreshToken().getToken()
+                        });
+                    },
+                    onFailure: function(err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: 'Error login usuario'
+                        });
+                    },
+                });
+            
+            });
+            app.post('/check', (req, res) => {
 
-                return User.findOne({email, password})
-                .then((userFound) => {
-                    if(!userFound) {
-                        return res.status(400).json({
-                            mensajeMostrar: 'Error usuario no encontrado'
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+                const code = req.body.code;
+            
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.confirmRegistration(code, true, function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: 'Error verificar usuario'
                         });
                     }
-                    return res.status(200).json(userFound);
-                })
-                .catch((err) => {
-                    console.error(err.message);
-                    return res.status(500).json({
-                        mensajeMostrar: 'Error busqueda de usuario'
-                    });
-                });
-            });
-
-            app.post('/register', (req, res) => {
-                const name = req.body.name.trim();
-                const lastName = req.body.lastName.trim();
-                const email = req.body.email.trim();
-                const password = req.body.password.trim();
-                const direccion = req.body.direccion.trim();
-
-                const newUser = new User({
-                    nombre: name,
-                    apellido: lastName,
-                    password: password,
-                    email: email,
-                    direccion: direccion
-                });
-
-                return newUser.save()
-                .then(() => {
+                    console.log('callresult' + result);
                     return res.status(200).json({
-                        mensajeMostrar: 'Nuevo usuario registrado'
-                    });
-                })
-                .catch((err) => {
-                    console.error(err.message);
-                    return res.status(500).json({
-                        mensajeMostrar: 'Error creacion de nuevo usuario'
+                        mensajeMostrar: 'usuario verificado'
                     });
                 });
+            
+            });
+            app.post('/resendConfirmCode', (req, res) => {
+
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+            
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.resendConfirmationCode(function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: 'Error reenviar codigo'
+                        });
+                    }
+                    console.log('callresult' + result);
+                    return res.status(200).json({
+                        mensajeMostrar: 'codigo reenviado'
+                    });
+                });
+            
             });
             
+            app.post('/forgotPassword', (req, res) => {
 
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+            
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.forgotPassword({
+                    onSuccess: function(result) {
+                        console.log('call result: ' + result);
+                        return res.status(200).json({
+                            mensajeMostrar: "olvido contraseña"
+                        });
+                    },
+                    onFailure: function(err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: "error olvido contraseña"
+                        });
+                    }
+                });
+            
+            });
+            app.post('/forgotPassword/confirm', (req, res) => {
+
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+                const code = req.body.code;
+                const newPassword = req.body.password.trim();
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.confirmPassword(code,newPassword,{
+                    onSuccess: function(result) {
+                        console.log('call result: ' + result);
+                        return res.status(200).json({
+                            mensajeMostrar: "contraseña reestablecida"
+                        });
+                    },
+                    onFailure: function(err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: "error restablecer contraseña"
+                        });
+                    }
+                });
+            
+            });
+            
+            app.post('/register', (req, res) => {
+                    let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                    const name = req.body.name.trim();
+                    const lastName = req.body.lastName.trim();
+                    const email = req.body.email.trim();
+                    const password = req.body.password.trim();
+                    const direccion = req.body.direccion.trim();
+
+                    var attributeList = [];
+                    attributeList.push(new AmazonCognitoIdentity.CognitoUserAttribute({Name:"name",Value: name}));
+                    attributeList.push(new AmazonCognitoIdentity.CognitoUserAttribute({Name:"family_name",Value: lastName}));
+                    attributeList.push(new AmazonCognitoIdentity.CognitoUserAttribute({Name:"address",Value: direccion}));
+                    attributeList.push(new AmazonCognitoIdentity.CognitoUserAttribute({Name:"email",Value: email}));
+                    
+                    userPool.signUp(email, password, attributeList, null, 
+                    function(err, result){
+                        if (err) {
+                            console.log(err);
+                            return res.status(500).json({
+                                mensajeMostrar: 'Error registrar usuario'
+                            });
+                        }
+                        return res.status(200).json({
+                            mensajeMostrar: 'usuario registrado'
+                        });
+                    });
+                
+            });
 
             app.listen(process.env.SERVER_PORT, () => console.log(`Servidor corriendo en el puerto ${process.env.SERVER_PORT}`));
             return generatorUser();
