@@ -103,6 +103,109 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 });
             
             });
+            app.post('/check', (req, res) => {
+
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+                const code = req.body.code;
+            
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.confirmRegistration(code, true, function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: 'Error verificar usuario'
+                        });
+                    }
+                    console.log('callresult' + result);
+                    return res.status(200).json({
+                        mensajeMostrar: 'usuario verificado'
+                    });
+                });
+            
+            });
+            app.post('/resendConfirmCode', (req, res) => {
+
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+            
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.resendConfirmationCode(function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: 'Error reenviar codigo'
+                        });
+                    }
+                    console.log('callresult' + result);
+                    return res.status(200).json({
+                        mensajeMostrar: 'codigo reenviado'
+                    });
+                });
+            
+            });
+            
+            app.post('/forgotPassword', (req, res) => {
+
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+            
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.forgotPassword({
+                    onSuccess: function(result) {
+                        console.log('call result: ' + result);
+                        return res.status(200).json({
+                            mensajeMostrar: "olvido contraseña"
+                        });
+                    },
+                    onFailure: function(err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: "error olvido contraseña"
+                        });
+                    }
+                });
+            
+            });
+            app.post('/forgotPassword/confirm', (req, res) => {
+
+                let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                const email = req.body.email.trim();
+                const code = req.body.code;
+                const newPassword = req.body.password.trim();
+                var userData = {
+                    Username : email,
+                    Pool : userPool
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+                cognitoUser.confirmPassword(code,newPassword,{
+                    onSuccess: function(result) {
+                        console.log('call result: ' + result);
+                        return res.status(200).json({
+                            mensajeMostrar: "contraseña reestablecida"
+                        });
+                    },
+                    onFailure: function(err) {
+                        console.log(err);
+                        return res.status(500).json({
+                            mensajeMostrar: "error restablecer contraseña"
+                        });
+                    }
+                });
+            
+            });
             
             app.post('/register', (req, res) => {
                     let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
