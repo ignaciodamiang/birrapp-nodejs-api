@@ -16,6 +16,7 @@ app.use(morgan('dev')); //configuracion para ver las peticiones que se le hacen 
 const {generatorUser} = require('@utils/generator'); // estoy usando un metodo para generar automaticamente usuarios 
 //es util para iniciar el proyecto y q todos tengamos al menos un mismo dato 
 const User = require('@models/user');
+const Cart = require('@models/carrito');
 
 
 // instale el nodemon esto es una maravilla xD basicamente sin esto tendriamos q detener la api y volver a correr por cada "guardar" que hagamos 
@@ -27,6 +28,7 @@ const AWS = require('aws-sdk');
 const jwkToPem = require('jwk-to-pem');
 const jwt = require('jsonwebtoken');
 global.fetch = require('node-fetch');
+const Product = require('@models/producto'); //traigo el modelo user
 
 const poolData = {    
     UserPoolId : "us-east-2_PdnQkA2Bb", // Your user pool id here    
@@ -43,10 +45,56 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
             // app.get app.post app.put ....etc con esto definiremos rutas y con que metodos le pegaran a la ruta ...
             //ahora mismo esta todo aca (index.js) el conectarse a mongo y las rutas pero tendriamos q separarlo 
 
+            app.post('/nuevoproducto', (req, res) => {
+                return Product.create({
+                    description: req.body.descripcion,
+                    name: req.body.nombre,
+                    price : req.body.precio,
+                    type: req.body.tipo
+                }).then(() => {
+                    return res.status(200).json({
+                        mensaje: 'todo bien'                        
+                    });
+                })
+                .catch((err) => {
+                    console.log(err.message);
+                    return res.status(500).json({
+                        mensaje: 'error interno'                        
+                    });
+                });
+            });
+            app.post('/carrito', (req, res) => {
+                return Cart.create({
+                    quantity: req.body.pepe,
+                    product: req.body.idProducto,
+                }).then(() => {
+                    return res.status(200).json({
+                        mensaje: 'todo bien'                        
+                    });
+                })
+                .catch((err) => {
+                    console.log(err.message);
+                    return res.status(500).json({
+                        mensaje: 'error interno'                        
+                    });
+                });
+            });
+            app.get('/obtenercarrito', (req, res) => {
+                return Cart.find().populate('product')
+                .then((carritos) => {
+                    return res.status(200).json(carritos);
+                })
+                .catch((err) => {
+                    console.log(err.message);
+                    return res.status(500).json({
+                        mensaje: 'error interno'                        
+                    });
+                });
+            });
+
             // ejemplo http://localhost:3000/jose
-            app.get('/nombre/:nombre', (req, res) => {
+            app.get('/nombre', (req, res) => {
                 //hara un console log del param nombre en este caso "jose"
-                console.log(req.params.nombre);
                 //otro console log de lo que le llegue en el body
                 console.log(req.body);
 
@@ -54,16 +102,17 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 // retorna todos los users ... User.find devuelve todos los registros de la tabla user
                 // algo asi como (select * from user;) 
                 // datito: si fuese User.find({nombre: 'jose'}) seria lo mismo que (select * from user where nombre = 'jose')
-                return User.find()
+                return User.findOne({nombre: 'jose'})
                 .then((usuariosEncontrados) => {
                     /* toda peticion a la api debe retornar algo esto se hace con 
                         res.status(numero).json({jsonAMandar}) donde numero es el numero de estado que queremos retornar
                         y el jsonAMandar es los datos en forma de json q mandaremos
                     */
-                    return res.status(200).json({
-                        hola: 'hola mundo',
+                        return res.status(200).json(usuariosEncontrados);
+                    /* return res.status(200).json({
+                        //hola: 'hola mundo',
                         mensajeMostrar: usuariosEncontrados
-                    });
+                    }); */
                 }).catch((err) => {
                     console.log(err.message);
                     return res.status(500).json({
