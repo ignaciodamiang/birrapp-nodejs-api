@@ -64,10 +64,25 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 });
             });
             app.post('/carrito', (req, res) => {
+                const arrayAGuardar = [
+                    {
+                        quantity: req.body.cantidad,
+                        product: req.body.idProducto,
+                    },
+                    {
+                        quantity: 2,
+                        product: '6181f60dc30dc200b1eb21a0',
+                    },
+                    {
+                        quantity: 3,
+                        product: '6181f60dc30dc200b1eb21a1',
+                    }
+                    ];
+
                 return Cart.create({
-                    quantity: req.body.pepe,
-                    product: req.body.idProducto,
-                }).then(() => {
+                products: {
+                array: arrayAGuardar}
+            }).then(() => {
                     return res.status(200).json({
                         mensaje: 'todo bien'                        
                     });
@@ -80,7 +95,7 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 });
             });
             app.get('/obtenercarrito', (req, res) => {
-                return Cart.find().populate('product')
+                return Cart.find().populate('products.array')
                 .then((carritos) => {
                     return res.status(200).json(carritos);
                 })
