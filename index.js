@@ -97,7 +97,7 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
             app.get('/obtenercarrito', (req, res) => {
                 return Cart.find().populate('products.array')
                 .then((carritos) => {
-                    return res.status(200).json(carritos);
+                    return res.status(200).json(carritos[0].products.array);
                 })
                 .catch((err) => {
                     console.log(err.message);
