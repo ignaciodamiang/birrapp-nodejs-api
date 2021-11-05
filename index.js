@@ -107,7 +107,7 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 });
             });
 
-            //aqui voy a crear la funcion de traer todos los productos a la vista del home
+            //aqui voy a crear la funcion de traer todos los productos a la vista del home y espero que funcion
             app.get('/home', (req, res) => {
                 return Product.find().then((producto) =>{
                         return res.status(200).json(producto);
