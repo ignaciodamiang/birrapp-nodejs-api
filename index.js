@@ -80,8 +80,7 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                     ];
 
                 return Cart.create({
-                products: {
-                array: arrayAGuardar}
+                items: arrayAGuardar
             }).then(() => {
                     return res.status(200).json({
                         mensaje: 'todo bien'                        
@@ -95,9 +94,9 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 });
             });
             app.get('/obtenercarrito', (req, res) => {
-                return Cart.find().populate('products.array products.array.product')
-                .then((carritos) => { // esto te devuelve toooodos los carritos OJO
-                    return res.status(200).json(carritos[0].products.array);
+                return Cart.findOne({_id:req.body.idCarrito}).populate('products.array products.array.product')
+                .then((carrito) => { // esto te devuelve el carrito por id
+                    return res.status(200).json(carrito);
                 })
                 .catch((err) => {
                     console.log(err.message);
