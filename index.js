@@ -19,6 +19,7 @@ const User = require('@models/user');
 const Cart = require('@models/carrito');
 
 
+
 // instale el nodemon esto es una maravilla xD basicamente sin esto tendriamos q detener la api y volver a correr por cada "guardar" que hagamos 
 // y nodemon te lo hace automaticamente ver package.json ("start": "nodemon index.js") 
 
@@ -105,6 +106,20 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                     });
                 });
             });
+
+            //aqui voy a crear la funcion de traer todos los productos a la vista del home
+            app.get('/home', (req, res) => {
+                return Product.find().then((producto) =>{
+                        return res.status(200).json(producto);
+                }).catch((err) =>{
+                    console.log(err.message);
+                    return res.status(500).json({
+                        mensaje:'error interno'
+                    });
+                })
+
+            })
+
 
             // ejemplo http://localhost:3000/jose
             app.get('/nombre', (req, res) => {
