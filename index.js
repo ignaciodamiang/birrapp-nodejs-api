@@ -95,8 +95,8 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                 });
             });
             app.get('/obtenercarrito', (req, res) => {
-                return Cart.findOne({_id:req.body.idCarrito}).populate('products.array products.array.product')
-                .then((carrito) => { // esto te devuelve el carrito por id
+                return Cart.findOne({usuario:req.query.usuario}).populate('items.product')
+                .then((carrito) => { // esto te devuelve el carrito por usuario
                     return res.status(200).json(carrito);
                 })
                 .catch((err) => {
@@ -292,6 +292,8 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                     const email = req.body.email.trim();
                     const password = req.body.password.trim();
                     const direccion = req.body.direccion.trim();
+                    var carrito
+                    var items = [];
 
                     var attributeList = [];
                     attributeList.push(new AmazonCognitoIdentity.CognitoUserAttribute({Name:"name",Value: name}));
@@ -307,11 +309,16 @@ const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a conti
                                 mensajeMostrar: 'Error registrar usuario'
                             });
                         }
-                        return res.status(200).json({
-                            mensajeMostrar: 'usuario registrado'
+                        carrito = new Cart({
+                            items: items,
+                            usuario: email
+                        })
+                        return carrito.save().then(() => {
+                            return res.status(200).json({
+                                mensajeMostrar: 'usuario registrado'
+                            });
                         });
                     });
-                
             });
 
             app.listen(process.env.SERVER_PORT, () => console.log(`Servidor corriendo en el puerto ${process.env.SERVER_PORT}`));
