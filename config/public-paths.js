@@ -1,9 +1,9 @@
 'use strict';
 const publicPaths = {
-    get: ['api/home'],
+    get: ['home'],
     put: [],
-    post: ['api/login','api/check','api/resendConfirmCode' ,
-    'api/forgotPassword' ,'api/forgotPassword/confirm' ,'api/register'],
+    post: ['login','check','resendConfirmCode' ,
+    'forgotPassword' ,'forgotPassword/confirm' ,'register'],
     delete: []
 };
 
