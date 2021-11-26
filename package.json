@@ -28,6 +28,7 @@
     "@models": "lib/models",
     "@utils": "lib/utils",
     "@middlewares": "lib/utils/middlewares",
-    "@decorators-utils": "lib/utils/decorators"
+    "@decorators-utils": "lib/utils/decorators",
+    "@lib": "lib/"
   }
 }
