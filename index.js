@@ -19,11 +19,21 @@ app.use(morgan('dev')); //configuracion para ver las peticiones que se le hacen 
 // instale el nodemon esto es una maravilla xD basicamente sin esto tendriamos q detener la api y volver a correr por cada "guardar" que hagamos 
 // y nodemon te lo hace automaticamente ver package.json ("start": "nodemon index.js" esto en produccion no iria ya que no sera "correcto" pero a nosotros nos re sirve para hacernos la vida mas facil) 
 global.fetch = require('node-fetch');
+const formData = require('express-form-data');
 const mongoose = require('mongoose'); //mongoose es mongo basicamente ...a continuacion nos conectaremos a la base de datos 
-mongoose.Promise = Promise; // proccess.env es como indicaremos que nos referimos a la variable de entorno
+mongoose.Promise = Promise;
+
+const options = {
+    uploadDir: process.env.UPLOAD_FILE_TMP_FOLDER,
+    autoClean: true
+}; // proccess.env es como indicaremos que nos referimos a la variable de entorno
 return mongoose.connect('mongodb://' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB,
 {useNewUrlParser: true, useUnifiedTopology: true})
 .then(() => {
+    app.use(formData.parse(options));
+    app.use(formData.format());
+    app.use(formData.union());
+
     app.get(publicPaths.regex('get'), extractJwt);
     app.put(publicPaths.regex('put'), extractJwt);
     app.post(publicPaths.regex('post'), extractJwt);
