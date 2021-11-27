@@ -4,3 +4,11 @@ package-lock.json
 *.log
 .vs
 .vscode/settings.json
+package-lock.json
+public/images/*/*.svg
+public/images/*/*.png
+public/images/*/*.jpg
+public/images/*/*.jpeg
+tmp/*.jpg
+tmp/*.png
+tmp/*.svg
