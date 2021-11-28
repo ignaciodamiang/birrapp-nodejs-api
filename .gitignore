@@ -1,10 +1,8 @@
 node_modules
 .env
-package-lock.json
 *.log
 .vs
 .vscode/settings.json
-package-lock.json
 public/images/*/*.svg
 public/images/*/*.png
 public/images/*/*.jpg
