@@ -29,8 +29,7 @@ const options = {
     uploadDir: process.env.UPLOAD_FILE_TMP_FOLDER,
     autoClean: true
 }; // proccess.env es como indicaremos que nos referimos a la variable de entorno
-return mongoose.connect('mongodb://' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB,
-{useNewUrlParser: true, useUnifiedTopology: true})
+return mongoose.connect(process.env.MONGODB_HOST,{useNewUrlParser: true, useUnifiedTopology: true})
 .then(() => {
     app.use(formData.parse(options));
     app.use(formData.format());
